@@ -10,7 +10,7 @@ function App() {
   // Sync user with database when they sign in
   useEffect(() => {
     if (user) {
-      // Create/update user in your database
+      // Create/update user in database
       fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
