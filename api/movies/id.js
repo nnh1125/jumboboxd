@@ -23,7 +23,7 @@ export default async function handler(req, res) {
           const movie = await response.json()
           
           // Also check if this movie has been rated/watched by the user
-          // This will be implemented when we add user functionality
+          // This will be implemented when adding user functionality
           
           res.status(200).json(movie)
         } catch (error) {

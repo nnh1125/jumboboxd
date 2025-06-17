@@ -11,7 +11,8 @@ function App() {
   useEffect(() => {
     if (user) {
       // Create/update user in database
-      fetch('/api/users', {
+      console.log('User signed in:', user)
+      fetch('/api/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id })
