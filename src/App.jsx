@@ -3,6 +3,7 @@ import { SignIn, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-r
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import Home from './pages/Home'
+import MovieDetail from './components/MovieDetail'
 
 function App() {
   const { user } = useUser()
@@ -125,17 +126,17 @@ function App() {
   )
 }
 
-// Placeholder components (you'll build these next)
-function MovieDetail() {
-  return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h2 className="text-3xl font-bold mb-4 text-white">Movie Title</h2>
-        <p className="text-gray-300">Movie details will appear here</p>
-      </div>
-    </div>
-  )
-}
+// Placeholder components 
+// function MovieDetail() {
+//   return (
+//     <div className="max-w-4xl mx-auto">
+//       <div className="bg-gray-800 rounded-lg p-6">
+//         <h2 className="text-3xl font-bold mb-4 text-white">Movie Title</h2>
+//         <p className="text-gray-300">Movie details will appear here</p>
+//       </div>
+//     </div>
+//   )
+// }
 
 function Profile() {
   const { user } = useUser()

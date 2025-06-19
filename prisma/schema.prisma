@@ -27,7 +27,7 @@ model User {
 
 model Movie {
   id          String   @id @default(cuid())
-  tmdbId      Int      @unique
+  movieId      String      @unique
   title       String
   overview    String?
   posterPath  String?
@@ -58,7 +58,6 @@ model WatchedMovie {
   userId     String
   movieId    String
   watchedAt  DateTime @default(now())
-  
   user       User     @relation(fields: [userId], references: [id])
   movie      Movie    @relation(fields: [movieId], references: [id])
   

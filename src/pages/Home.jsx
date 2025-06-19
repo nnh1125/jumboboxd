@@ -111,7 +111,7 @@ function Home() {
 
     setSearching(true)
     try {
-      // Since the API doesn't have search, we'll fetch all movies and filter client-side
+      // Since the API doesn't have search, fetch all movies and filter client-side
       const allMovies = []
       
       // Fetch all 10 pages
