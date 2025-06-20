@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 
 function MovieDetail() {
-  const { id } = useParams(); // This is the tmdbId from your external API
-  const { user } = useUser();
+  const { id } = useParams(); // This is the Id from external API
+  const { user, isLoaded } = useUser();
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,10 +19,10 @@ function MovieDetail() {
     }
 
     fetchMovieDetails();
-    if (user) {
+    if (user && isLoaded) {
       checkWatchedStatus();
     }
-  }, [id, user]);
+  }, [id, user, isLoaded]);
 
   const fetchMovieDetails = async () => {
     try {
@@ -53,10 +53,12 @@ function MovieDetail() {
 
   const checkWatchedStatus = async () => {
     try {
-      const response = await fetch(`/api/movies/check-watched?id=${id}`);
+      const response = await fetch(`/api/movies/check-watched?userId=${user.id}&id=${id}`);
       if (response.ok) {
         const data = await response.json();
         setIsWatched(data.isWatched);
+      } else {
+        console.error('Failed to check watched status:', response.status);
       }
     } catch (err) {
       console.error('Error checking watched status:', err);
@@ -73,11 +75,17 @@ function MovieDetail() {
         const response = await fetch('/api/movies/watched', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: parseInt(id) })
+          body: JSON.stringify({ 
+            userId: user.id,
+            id: id 
+          })
         });
 
         if (response.ok) {
           setIsWatched(false);
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to remove from watched:', errorData);
         }
       } else {
         // Mark as watched
@@ -85,7 +93,8 @@ function MovieDetail() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            id: parseInt(id),
+            userId: user.id,
+            id: id,
             title: movie.title,
             overview: movie.description || movie.overview,
             posterPath: movie.poster,
@@ -95,6 +104,9 @@ function MovieDetail() {
 
         if (response.ok) {
           setIsWatched(true);
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to mark as watched:', errorData);
         }
       }
     } catch (err) {
@@ -103,6 +115,7 @@ function MovieDetail() {
       setWatchedLoading(false);
     }
   };
+
 
   if (loading) {
     return (

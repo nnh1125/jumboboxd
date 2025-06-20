@@ -8,28 +8,10 @@ export default async function handler(req, res) {
     }
   
     try {
-        const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
-        req.cookies?.__session || 
-        req.headers['x-clerk-auth-token']
-
-        if (!sessionToken) {
-        return res.status(401).json({ error: 'No authentication token provided' })
-        }
-
-        // Verify the token and get user info
-        const payload = await verifyToken(sessionToken, {
-        secretKey: process.env.CLERK_SECRET_KEY
-        })
-
-const userId = payload.sub
-      const { id } = req.query
+      const { userId, id } = req.query
       
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' })
-      }
-  
-      if (!id) {
-        return res.status(400).json({ error: 'Movie id is required' })
+      if (!userId || !id) {
+        return res.status(400).json({ error: 'User ID and movie ID are required' })
       }
   
       // Find the user

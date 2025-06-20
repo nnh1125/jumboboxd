@@ -1,37 +1,16 @@
 // api/movies/watched.js
 import prisma from '../../lib/prisma.js' 
-import { verifyToken }from '@clerk/backend'
 
 export default async function handler(req, res) {
   try {
-    // Get the session token from the request headers
-    const sessionToken = req.headers.authorization?.replace('Bearer ', '') || 
-                        req.cookies?.__session || 
-                        req.headers['x-clerk-auth-token']
-    
-    if (!sessionToken) {
-      return res.status(401).json({ error: 'No authentication token provided' })
-    }
-
-    // Verify the token and get user info
-    const payload = await verifyToken(sessionToken, {
-      secretKey: process.env.CLERK_SECRET_KEY
-    })
-    
-    const userId = payload.sub
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
 
     if (req.method === 'POST') {
       // Mark movie as watched
-      const { id, title, overview, posterPath, releaseDate } = req.body
+      const { userId, id, title, overview, posterPath, releaseDate } = req.body
       
-      if (!id) {
-        return res.status(400).json({ error: 'Movie id is required' })
+      if (!userId || !id) {
+        return res.status(400).json({ error: 'User ID and movie ID are required' })
       }
-
       // Find or create the user
       let user = await prisma.user.findUnique({
         where: { clerkId: userId }
@@ -81,10 +60,10 @@ export default async function handler(req, res) {
 
     } else if (req.method === 'DELETE') {
       // Remove movie from watched list
-      const { id } = req.body
+      const { userId, id } = req.body
       
-      if (!id) {
-        return res.status(400).json({ error: 'Movie id is required' })
+      if (!userId || !id) {
+        return res.status(400).json({ error: 'User ID and movie ID are required' })
       }
 
       // Find the user
@@ -98,7 +77,7 @@ export default async function handler(req, res) {
 
       // Find the movie
       const movie = await prisma.movie.findUnique({
-        where: { id: id.toString() }
+        where: { movieId: id.toString() }
       })
 
       if (!movie) {
@@ -119,7 +98,11 @@ export default async function handler(req, res) {
 
     } else if (req.method === 'GET') {
       // Get user's watched movies
-      const { page = 1, limit = 20 } = req.query
+      const { userId, page = 1, limit = 20 } = req.query
+
+      if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' })
+      }
       
       // Find the user
       const user = await prisma.user.findUnique({
