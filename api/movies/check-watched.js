@@ -1,6 +1,5 @@
 // api/movies/watched.js
-import prisma from '../../lib/prisma.js' // Adjust path as needed
-import { verifyToken }from '@clerk/backend'
+import prisma from '../../lib/prisma.js' 
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
