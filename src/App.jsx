@@ -3,7 +3,8 @@ import { SignIn, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-r
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import Home from './pages/Home'
-import MovieDetail from './components/MovieDetail'
+import MovieDetail from './pages/MovieDetail'
+import Profile from './pages/Profile'
 
 function App() {
   const { user } = useUser()
@@ -28,7 +29,7 @@ function App() {
         <header className="bg-gray-800 shadow-lg sticky top-0 z-50">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center h-16">
-              {/* Logo/Brand */}
+              {/* Logo */}
               <Link to="/" className="flex items-center space-x-2">
                 <span className="text-2xl">🎬</span>
                 <span className="text-xl font-bold text-yellow-400">JumboBoxd</span>
@@ -37,9 +38,6 @@ function App() {
               {/* Navigation Links */}
               <nav className="hidden md:flex items-center space-x-6">
                 <SignedIn>
-                  <Link to="/" className="text-gray-300 hover:text-white transition">
-                    Browse
-                  </Link>
                   <Link to="/watchlist" className="text-gray-300 hover:text-white transition">
                     Watchlist
                   </Link>
@@ -126,32 +124,7 @@ function App() {
   )
 }
 
-// Placeholder components 
-// function MovieDetail() {
-//   return (
-//     <div className="max-w-4xl mx-auto">
-//       <div className="bg-gray-800 rounded-lg p-6">
-//         <h2 className="text-3xl font-bold mb-4 text-white">Movie Title</h2>
-//         <p className="text-gray-300">Movie details will appear here</p>
-//       </div>
-//     </div>
-//   )
-// }
-
-function Profile() {
-  const { user } = useUser()
-  
-  return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-6 text-white">My Profile</h2>
-      <div className="bg-gray-800 rounded-lg p-6">
-        <p className="text-gray-300">Welcome, {user?.firstName || 'User'}!</p>
-        <p className="text-gray-400 mt-2">Your watched movies and ratings will appear here</p>
-      </div>
-    </div>
-  )
-}
-
+//To be implemented later
 function Watchlist() {
   return (
     <div>

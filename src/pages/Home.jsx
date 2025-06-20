@@ -63,7 +63,6 @@ function MovieSection({ title, movies, loading }) {
 function Home() {
   const [popularMovies, setPopularMovies] = useState([])
   const [topRatedMovies, setTopRatedMovies] = useState([])
-  const [upcomingMovies, setUpcomingMovies] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
@@ -88,17 +87,8 @@ function Home() {
       // Use different pages for different sections
       setPopularMovies(page1.slice(0, 8))
       setTopRatedMovies(page2.slice(0, 8))
-      setUpcomingMovies(page3.slice(0, 8))
     } catch (error) {
       console.error('Error fetching movies:', error)
-      // For now, set some mock data so you can see the UI
-      const mockMovie = {
-        id: 1,
-        title: "Sample Movie",
-        poster: null,
-        year: 2024
-      }
-      setPopularMovies(Array(8).fill(mockMovie).map((m, i) => ({ ...m, id: i })))
     } finally {
       setLoading(false)
     }
@@ -195,12 +185,6 @@ function Home() {
           <MovieSection
             title="Top Rated"
             movies={topRatedMovies}
-            loading={loading}
-          />
-          
-          <MovieSection
-            title="Upcoming"
-            movies={upcomingMovies}
             loading={loading}
           />
         </>
