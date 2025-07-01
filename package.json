@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel-build": "prisma generate && vite build"
   },
   "dependencies": {
     "@clerk/backend": "^1.33.0",
@@ -36,4 +37,5 @@
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
   }
+  
 }
