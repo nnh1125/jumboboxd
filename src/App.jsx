@@ -14,7 +14,7 @@ function App() {
     if (user) {
       // Create/update user in database
       console.log('User signed in:', user)
-      fetch('/api/user', {
+      fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id })
@@ -69,7 +69,7 @@ function App() {
         <main className="container mx-auto px-4 py-8">
           <Routes>
             {/* Public Routes */}
-            <Route path="/sign-in" element={
+            <Route path="/sign-in/*" element={
               <div className="flex justify-center items-center min-h-[60vh]">
                 <SignIn routing="path" path="/sign-in" />
               </div>
