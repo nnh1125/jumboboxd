@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import Home from './pages/Home'
 import MovieDetail from './pages/MovieDetail'
 import Profile from './pages/Profile'
-import WatchList from './pages/WatchList'
+import Watchlist from './pages/WatchList'  // Fixed: lowercase 'list'
 
 function App() {
   const { user } = useUser()
@@ -83,29 +83,13 @@ function App() {
             {/* Public Routes */}
             <Route path="/sign-in/*" element={
               <div className="flex justify-center items-center min-h-[60vh]">
-                <SignIn 
-                  routing="path" 
-                  path="/sign-in"
-                  signUpUrl="/sign-up"
-                  redirectUrl="/"
-                />
+                <SignIn afterSignInUrl="/" signUpUrl="/sign-up" />
               </div>
             } />
             
             <Route path="/sign-up/*" element={
               <div className="flex justify-center items-center min-h-[60vh]">
-                <SignUp 
-                  routing="path" 
-                  path="/sign-up"
-                  signInUrl="/sign-in"
-                  redirectUrl="/"
-                />
-              </div>
-            } />
-            
-            <Route path="/sign-up/*" element={
-              <div className="flex justify-center items-center min-h-[60vh]">
-                <SignUp routing="path" path="/sign-up" />
+                <SignUp afterSignUpUrl="/" signInUrl="/sign-in" />
               </div>
             } />
             
@@ -156,7 +140,7 @@ function App() {
             
             <Route path="/watchlist" element={
               <SignedIn>
-                <WatchList />
+                <Watchlist />
               </SignedIn>
             } />
           </Routes>
