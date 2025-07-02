@@ -1,6 +1,7 @@
 // src/pages/Home.jsx
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import Search from '../components/Search'
 
 // Movie card component
 function MovieCard({ movie }) {
@@ -63,10 +64,10 @@ function MovieSection({ title, movies, loading }) {
 function Home() {
   const [popularMovies, setPopularMovies] = useState([])
   const [topRatedMovies, setTopRatedMovies] = useState([])
+  const [upcomingMovies, setUpcomingMovies] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState([])
-  const [searching, setSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Fetch movies from your API
   useEffect(() => {
@@ -87,41 +88,26 @@ function Home() {
       // Use different pages for different sections
       setPopularMovies(page1.slice(0, 8))
       setTopRatedMovies(page2.slice(0, 8))
+      setUpcomingMovies(page3.slice(0, 8))
     } catch (error) {
       console.error('Error fetching movies:', error)
+      // For now, set some mock data so you can see the UI
+      const mockMovie = {
+        id: 1,
+        title: "Sample Movie",
+        poster: null,
+        year: 2024
+      }
+      setPopularMovies(Array(8).fill(mockMovie).map((m, i) => ({ ...m, id: i })))
     } finally {
       setLoading(false)
     }
   }
 
-  // Handle search
-  const handleSearch = async (e) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
-
-    setSearching(true)
-    try {
-      // Since the API doesn't have search, fetch all movies and filter client-side
-      const allMovies = []
-      
-      // Fetch all 10 pages
-      for (let page = 1; page <= 10; page++) {
-        const response = await fetch(`/api/movies/list?page=${page}`)
-        const movies = await response.json()
-        allMovies.push(...movies)
-      }
-      
-      // Filter movies by title
-      const filtered = allMovies.filter(movie => 
-        movie.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-      
-      setSearchResults(filtered)
-    } catch (error) {
-      console.error('Search error:', error)
-    } finally {
-      setSearching(false)
-    }
+  // Handle search results
+  const handleSearchResults = (results, query) => {
+    setSearchResults(results)
+    setSearchQuery(query)
   }
 
   return (
@@ -138,30 +124,10 @@ function Home() {
         </p>
         
         {/* Search Bar */}
-        <form onSubmit={handleSearch} className="max-w-2xl">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for movies..."
-              className="w-full px-4 py-3 pl-12 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            />
-            <svg
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-        </form>
+        <Search 
+          onResults={handleSearchResults}
+          className="max-w-2xl"
+        />
       </div>
 
       {/* Search Results */}
@@ -169,7 +135,7 @@ function Home() {
         <MovieSection
           title={`Search Results for "${searchQuery}"`}
           movies={searchResults}
-          loading={searching}
+          loading={false}
         />
       )}
 

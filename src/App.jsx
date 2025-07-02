@@ -5,7 +5,8 @@ import { useEffect } from 'react'
 import Home from './pages/Home'
 import MovieDetail from './pages/MovieDetail'
 import Profile from './pages/Profile'
-import Watchlist from './pages/WatchList'  // Fixed: lowercase 'list'
+import Browse from './pages/Browse'
+import Watchlist from './pages/WatchList'  
 
 function App() {
   const { user } = useUser()
@@ -41,7 +42,7 @@ function App() {
               {/* Navigation Links */}
               <nav className="hidden md:flex items-center space-x-6">
                 <SignedIn>
-                  <Link to="/" className="text-gray-300 hover:text-white transition">
+                  <Link to="/browse" className="text-gray-300 hover:text-white transition">
                     Browse
                   </Link>
                   <Link to="/watchlist" className="text-gray-300 hover:text-white transition">
@@ -111,12 +112,6 @@ function App() {
                       >
                         Get Started
                       </Link>
-                      <Link 
-                        to="/sign-in"
-                        className="bg-gray-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-600 transition inline-block"
-                      >
-                        Sign In
-                      </Link>
                     </div>
                   </div>
                 </SignedOut>
@@ -125,7 +120,11 @@ function App() {
                 </SignedIn>
               </>
             } />
-            
+             <Route path="/browse" element={
+              <SignedIn>
+                <Browse />
+              </SignedIn>
+            } />
             <Route path="/movie/:id" element={
               <SignedIn>
                 <MovieDetail />
