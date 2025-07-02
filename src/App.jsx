@@ -1,10 +1,11 @@
 // src/App.jsx
-import { SignIn, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react'
+import { SignIn, SignUp, SignedIn, SignedOut, UserButton, useUser } from '@clerk/clerk-react'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { useEffect } from 'react'
 import Home from './pages/Home'
 import MovieDetail from './pages/MovieDetail'
 import Profile from './pages/Profile'
+import WatchList from './pages/WatchList'
 
 function App() {
   const { user } = useUser()
@@ -18,7 +19,9 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id })
-      }).catch(console.error)
+      }).catch(error => {
+        console.error('User sync failed:', error)
+      })
     }
   }, [user])
 
@@ -38,6 +41,9 @@ function App() {
               {/* Navigation Links */}
               <nav className="hidden md:flex items-center space-x-6">
                 <SignedIn>
+                  <Link to="/" className="text-gray-300 hover:text-white transition">
+                    Browse
+                  </Link>
                   <Link to="/watchlist" className="text-gray-300 hover:text-white transition">
                     Watchlist
                   </Link>
@@ -54,8 +60,14 @@ function App() {
                 </SignedIn>
                 <SignedOut>
                   <Link 
-                    to="/sign-in" 
+                    to="/sign-up" 
                     className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-medium hover:bg-yellow-300 transition"
+                  >
+                    Sign Up
+                  </Link>
+                  <Link 
+                    to="/sign-in" 
+                    className="bg-gray-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-gray-600 transition"
                   >
                     Sign In
                   </Link>
@@ -71,7 +83,29 @@ function App() {
             {/* Public Routes */}
             <Route path="/sign-in/*" element={
               <div className="flex justify-center items-center min-h-[60vh]">
-                <SignIn routing="path" path="/sign-in" />
+                <SignIn 
+                  routing="path" 
+                  path="/sign-in"
+                  signUpUrl="/sign-up"
+                  redirectUrl="/"
+                />
+              </div>
+            } />
+            
+            <Route path="/sign-up/*" element={
+              <div className="flex justify-center items-center min-h-[60vh]">
+                <SignUp 
+                  routing="path" 
+                  path="/sign-up"
+                  signInUrl="/sign-in"
+                  redirectUrl="/"
+                />
+              </div>
+            } />
+            
+            <Route path="/sign-up/*" element={
+              <div className="flex justify-center items-center min-h-[60vh]">
+                <SignUp routing="path" path="/sign-up" />
               </div>
             } />
             
@@ -86,12 +120,20 @@ function App() {
                     <p className="text-xl text-gray-400 mb-8">
                       Track movies you've watched. Save those you want to see.
                     </p>
-                    <Link 
-                      to="/sign-in"
-                      className="bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-yellow-300 transition inline-block"
-                    >
-                      Get Started
-                    </Link>
+                    <div className="space-x-4">
+                      <Link 
+                        to="/sign-up"
+                        className="bg-yellow-400 text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-yellow-300 transition inline-block"
+                      >
+                        Get Started
+                      </Link>
+                      <Link 
+                        to="/sign-in"
+                        className="bg-gray-700 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-600 transition inline-block"
+                      >
+                        Sign In
+                      </Link>
+                    </div>
                   </div>
                 </SignedOut>
                 <SignedIn>
@@ -114,25 +156,13 @@ function App() {
             
             <Route path="/watchlist" element={
               <SignedIn>
-                <Watchlist />
+                <WatchList />
               </SignedIn>
             } />
           </Routes>
         </main>
       </div>
     </Router>
-  )
-}
-
-//To be implemented later
-function Watchlist() {
-  return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-6 text-white">My Watchlist</h2>
-      <div className="bg-gray-800 rounded-lg p-6">
-        <p className="text-gray-300">Movies you want to watch will appear here</p>
-      </div>
-    </div>
   )
 }
 

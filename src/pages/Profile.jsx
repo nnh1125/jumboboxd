@@ -104,7 +104,7 @@ function Profile() {
           )}
           <div>
             <h1 className="text-3xl font-bold text-white">
-              {user?.firstName ? `${user.firstName} ${user?.lastName || ''}` : 'Your Profile'}
+              {user?.username ? `${user.username} ` : 'Your Profile'}
             </h1>
             <p className="text-gray-400">{user?.emailAddresses?.[0]?.emailAddress}</p>
           </div>
