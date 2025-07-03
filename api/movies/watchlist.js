@@ -115,7 +115,7 @@ export default async function handler(req, res) {
       }
       
       const movie = await prisma.movie.findUnique({
-        where: { movieId: parseInt(movieId) }
+        where: { movieId: movieId.toString() }
       })
       
       if (!movie) {
