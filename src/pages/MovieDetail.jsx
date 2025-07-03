@@ -1,15 +1,22 @@
-import { useParams } from 'react-router-dom';
+// src/pages/MovieDetail.jsx
+import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
+import { Eye, CheckCircle, PlusCircle, Loader2 } from 'lucide-react';
 
 function MovieDetail() {
   const { id } = useParams(); // This is the Id from external API
   const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
+  const navigate = useNavigate();
+  
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isWatched, setIsWatched] = useState(false);
   const [watchedLoading, setWatchedLoading] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -21,6 +28,7 @@ function MovieDetail() {
     fetchMovieDetails();
     if (user && isLoaded) {
       checkWatchedStatus();
+      checkWatchlistStatus();
     }
   }, [id, user, isLoaded]);
 
@@ -65,6 +73,27 @@ function MovieDetail() {
     }
   };
 
+  const checkWatchlistStatus = async () => {
+    try {
+      const token = await getToken();
+      
+      // Check if movie is in user's watchlist
+      const response = await fetch('/api/movies/watchlist', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const inWatchlist = data.movies.some(m => m.id === parseInt(id));
+        setIsInWatchlist(inWatchlist);
+      }
+    } catch (err) {
+      console.error('Error checking watchlist status:', err);
+    }
+  };
+
   const toggleWatched = async () => {
     if (!user || !movie) return;
     
@@ -104,6 +133,10 @@ function MovieDetail() {
 
         if (response.ok) {
           setIsWatched(true);
+          // If marking as watched, remove from watchlist
+          if (isInWatchlist) {
+            await toggleWatchlist(true);
+          }
         } else {
           const errorData = await response.json();
           console.error('Failed to mark as watched:', errorData);
@@ -116,12 +149,48 @@ function MovieDetail() {
     }
   };
 
+  const toggleWatchlist = async (skipStateUpdate = false) => {
+    if (!user) {
+      navigate('/sign-in');
+      return;
+    }
+    
+    if (!skipStateUpdate) setWatchlistLoading(true);
+    try {
+      const token = await getToken();
+      
+      const response = await fetch('/api/movies/watchlist', {
+        method: isInWatchlist ? 'DELETE' : 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          movieId: id
+        })
+      });
+
+      if (response.ok) {
+        if (!skipStateUpdate) setIsInWatchlist(!isInWatchlist);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to update watchlist:', errorData);
+      }
+    } catch (err) {
+      console.error('Error updating watchlist:', err);
+    } finally {
+      if (!skipStateUpdate) setWatchlistLoading(false);
+    }
+  };
 
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="bg-gray-800 rounded-lg p-8 text-center">
-          <p className="text-gray-300">Loading movie details...</p>
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-700 rounded w-1/3 mx-auto mb-4"></div>
+            <div className="h-4 bg-gray-700 rounded w-1/4 mx-auto"></div>
+          </div>
         </div>
       </div>
     );
@@ -175,19 +244,24 @@ function MovieDetail() {
           {/* Movie Details */}
           <div className="lg:w-2/3 xl:w-3/4 p-6">
             <div className="flex items-start justify-between mb-4">
-              <div>
+              <div className="flex-1">
                 <h1 className="text-4xl font-bold text-white">{movie.title}</h1>
                 {movie.year && (
                   <p className="text-xl text-gray-300">({movie.year})</p>
                 )}
               </div>
               
-              {/* Watched Status Badge */}
+              {/* Status Badges */}
               {user && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-4">
                   {isWatched && (
                     <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
                       ✓ Watched
+                    </span>
+                  )}
+                  {isInWatchlist && !isWatched && (
+                    <span className="bg-yellow-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      ✓ In Watchlist
                     </span>
                   )}
                 </div>
@@ -251,29 +325,76 @@ function MovieDetail() {
             </div>
             
             {/* Action Buttons */}
-            {user && (
-              <div className="flex gap-3 flex-wrap">
-                <button 
-                  onClick={toggleWatched}
-                  disabled={watchedLoading}
-                  className={`px-6 py-2 rounded-lg font-medium transition ${
-                    isWatched 
-                      ? 'bg-red-600 hover:bg-red-700 text-white' 
-                      : 'bg-green-600 hover:bg-green-700 text-white'
-                  } ${watchedLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {watchedLoading ? '...' : (isWatched ? 'Remove from Watched' : 'Mark as Watched')}
-                </button>
-                
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition">
-                  Add to Watchlist
-                </button>
-                
-                <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium transition">
-                  Rate Movie
-                </button>
-              </div>
-            )}
+            {user ? (
+  <div className="flex gap-3 flex-wrap">
+    {/* Watched Button */}
+    <button 
+      onClick={toggleWatched}
+      disabled={watchedLoading}
+      className={`px-6 py-3 rounded-lg font-medium transition flex items-center gap-2 ${
+        isWatched 
+          ? 'bg-green-600 hover:bg-green-700 text-white' 
+          : 'bg-blue-600 hover:bg-blue-700 text-white'
+      } ${watchedLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+    >
+      {watchedLoading ? (
+        <>
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Updating...</span>
+        </>
+      ) : (
+        <>
+          {isWatched ? (
+            <>
+              <CheckCircle className="w-5 h-5" />
+              <span>Watched</span>
+            </>
+          ) : (
+            <>
+              <Eye className="w-5 h-5" />
+              <span>Mark as Watched</span>
+            </>
+          )}
+        </>
+      )}
+    </button>
+
+    {/* Watchlist Button - Only show if not watched */}
+    {!isWatched && (
+      <button 
+        onClick={() => toggleWatchlist()}
+        disabled={watchlistLoading}
+        className={`px-6 py-3 rounded-lg font-medium transition flex items-center gap-2 ${
+          isInWatchlist 
+            ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+            : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
+        } ${watchlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+      >
+        {watchlistLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Updating...</span>
+          </>
+        ) : (
+          <>
+            <PlusCircle className="w-5 h-5" />
+            <span>{isInWatchlist ? 'In Watchlist' : 'Add to Watchlist'}</span>
+          </>
+        )}
+      </button>
+    )}
+  </div>
+) : (
+  <div className="bg-gray-700 rounded-lg p-4">
+    <p className="text-gray-300 mb-3">Sign in to track this movie</p>
+    <button
+      onClick={() => navigate('/sign-in')}
+      className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg font-medium transition"
+    >
+      Sign In
+    </button>
+  </div>
+)}
           </div>
         </div>
       </div>

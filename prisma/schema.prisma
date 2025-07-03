@@ -23,6 +23,7 @@ model User {
   
   ratings   Rating[]
   watched   WatchedMovie[]
+  watchlist Movie[] @relation("Watchlist")
 }
 
 model Movie {
@@ -36,6 +37,7 @@ model Movie {
   
   ratings     Rating[]
   watched     WatchedMovie[]
+  watchedBy   User[] @relation("Watchlist")
 }
 
 model Rating {
