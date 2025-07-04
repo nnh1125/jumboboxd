@@ -556,6 +556,14 @@ function MovieDetail() {
                   )}
                 </div>
               ))}
+              {user && !userReview && (
+                <button
+                  onClick={() => setShowReviewModal(true)}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg transition"
+                >
+                  Write a Review
+                </button>
+              )}
             </div>
           )}
         </div>
