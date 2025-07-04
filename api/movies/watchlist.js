@@ -92,6 +92,20 @@ export default async function handler(req, res) {
       let movie = await prisma.movie.findUnique({
         where: { movieId: movieId.toString() }
       })
+
+      if (!movie) {
+        // If movie doesn't exist, create a new entry
+        movie = await prisma.movie.create({
+          data: {
+            movieId: movieId.toString(),
+            title: req.body.title || 'Unknown Title',
+            posterPath: req.body.posterPath || null,
+            overview: req.body.overview || '',
+            releaseDate: req.body.year ? new Date(req.body.year, 0, 1) : null
+          }
+        })
+      }
+
       
       // Add to user's watchlist
       await prisma.user.update({

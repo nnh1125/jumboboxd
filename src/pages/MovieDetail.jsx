@@ -83,8 +83,6 @@ function MovieDetail() {
   const checkWatchlistStatus = async () => {
     try {
       const token = await getToken();
-
-      console.log
       
       // Check if movie is in user's watchlist
       const response = await fetch('/api/movies/watchlist', {
@@ -95,7 +93,7 @@ function MovieDetail() {
       
       if (response.ok) {
         const data = await response.json();
-        const inWatchlist = data.movies.some(m => m.id === parseInt(id));
+        const inWatchlist = data.movies.some(m => m.id === id.toString());
         setIsInWatchlist(inWatchlist);
       }
     } catch (err) {
@@ -166,6 +164,7 @@ function MovieDetail() {
     
     if (!skipStateUpdate) setWatchlistLoading(true);
     try {
+      console.log('Toggling watchlist for movie:', id);
       const token = await getToken();
       
       const response = await fetch('/api/movies/watchlist', {
@@ -175,7 +174,11 @@ function MovieDetail() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-          movieId: id
+          movieId: id,
+          title: movie.title,
+          overview: movie.description || movie.overview,
+          posterPath: movie.poster,
+          releaseDate: movie.releaseDate || movie.release_date
         })
       });
 
