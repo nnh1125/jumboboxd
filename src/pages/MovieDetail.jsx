@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { Eye, CheckCircle, PlusCircle, Loader2 } from 'lucide-react';
+import ReviewModal from '../components/ReviewModal';
 
 function MovieDetail() {
   const { id } = useParams(); // This is the Id from external API
@@ -17,6 +18,10 @@ function MovieDetail() {
   const [watchedLoading, setWatchedLoading] = useState(false);
   const [isInWatchlist, setIsInWatchlist] = useState(false);
   const [watchlistLoading, setWatchlistLoading] = useState(false);
+  const [userReview, setUserReview] = useState(null);
+  const [allReviews, setAllReviews] = useState([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -26,9 +31,11 @@ function MovieDetail() {
     }
 
     fetchMovieDetails();
+    fetchReviews();
     if (user && isLoaded) {
       checkWatchedStatus();
       checkWatchlistStatus();
+      fetchUserReview();
     }
   }, [id, user, isLoaded]);
 
@@ -76,6 +83,8 @@ function MovieDetail() {
   const checkWatchlistStatus = async () => {
     try {
       const token = await getToken();
+
+      console.log
       
       // Check if movie is in user's watchlist
       const response = await fetch('/api/movies/watchlist', {
@@ -183,6 +192,48 @@ function MovieDetail() {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      setReviewsLoading(true);
+      const token = await getToken();
+      const response = await fetch(`/api/movies/reviews?movieId=${id}&limit=5`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAllReviews(data.reviews);
+      }
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const fetchUserReview = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`/api/movies/reviews?movieId=${id}&userId=${user.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.reviews.length > 0) {
+          setUserReview(data.reviews[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching user review:', err);
+    }
+  };
+
+  const handleReviewSubmit = (review) => {
+    setUserReview(review);
+    fetchReviews(); // Refresh all reviews
+  };
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-6">
@@ -209,6 +260,7 @@ function MovieDetail() {
           </button>
         </div>
       </div>
+      
     );
   }
 
@@ -398,6 +450,93 @@ function MovieDetail() {
           </div>
         </div>
       </div>
+      {/* Reviews Section */}
+      <div className="mt-8 bg-gray-800 rounded-lg p-6">
+          <h3 className="text-2xl font-bold text-white mb-6">Reviews</h3>
+          
+          {/* User's Review */}
+          {userReview && (
+            <div className="mb-6 p-4 bg-gray-700 rounded-lg border-2 border-yellow-600">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-white">Your Review</span>
+                    <div className="flex text-yellow-400">
+                      {[...Array(5)].map((_, i) => (
+                        <span key={i} className={i < userReview.score ? '' : 'opacity-30'}>★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-gray-400 text-sm">
+                    {new Date(userReview.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowReviewModal(true)}
+                  className="text-yellow-400 hover:text-yellow-300 text-sm"
+                >
+                  Edit
+                </button>
+              </div>
+              {userReview.review && (
+                <p className="text-gray-300 mt-2">{userReview.review}</p>
+              )}
+            </div>
+          )}
+          {/* All Reviews */}
+          {reviewsLoading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-400">Loading reviews...</p>
+            </div>
+          ) : allReviews.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-400 mb-4">No reviews yet. Be the first to review!</p>
+              {user && !userReview && (
+                <button
+                  onClick={() => setShowReviewModal(true)}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-2 rounded-lg transition"
+                >
+                  Write a Review
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {allReviews.filter(r => r.user.id !== user?.id).map((review) => (
+                <div key={review.id} className="p-4 bg-gray-700 rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white">
+                          {review.user.username || review.user.email.split('@')[0]}
+                        </span>
+                        <div className="flex text-yellow-400 text-sm">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i} className={i < review.score ? '' : 'opacity-30'}>★</span>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        {new Date(review.updatedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  {review.review && (
+                    <p className="text-gray-300 mt-2">{review.review}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {/* Review Modal */}
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          movie={movie}
+          existingReview={userReview}
+          onReviewSubmit={handleReviewSubmit}
+        />
     </div>
   );
 }
