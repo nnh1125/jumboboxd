@@ -229,9 +229,36 @@ function MovieDetail() {
     }
   };
 
-  const handleReviewSubmit = (review) => {
+  const handleReviewSubmit = async (review) => {
     setUserReview(review);
     fetchReviews(); // Refresh all reviews
+    if (!isWatched && movie && user) {
+      try {
+        const response = await fetch('/api/movies/watched', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            id: id,
+            title: movie.title,
+            overview: movie.description || movie.overview,
+            posterPath: movie.poster,
+            releaseDate: movie.releaseDate || movie.release_date
+          })
+        });
+  
+        if (response.ok) {
+          setIsWatched(true);
+          if (isInWatchlist) {
+            await toggleWatchlist(true); // Remove from watchlist if needed
+          }
+        } else {
+          console.error('Failed to mark as watched when submitting review');
+        }
+      } catch (err) {
+        console.error('Error marking as watched after review:', err);
+      }
+    }
   };
 
   if (loading) {

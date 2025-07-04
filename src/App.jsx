@@ -6,7 +6,6 @@ import Home from './pages/Home'
 import MovieDetail from './pages/MovieDetail'
 import Profile from './pages/Profile'
 import Browse from './pages/Browse'
-import Watchlist from './pages/WatchList'  
 
 function App() {
   const { user } = useUser()
@@ -44,9 +43,6 @@ function App() {
                 <SignedIn>
                   <Link to="/browse" className="text-gray-300 hover:text-white transition">
                     Browse
-                  </Link>
-                  <Link to="/watchlist" className="text-gray-300 hover:text-white transition">
-                    Watchlist
                   </Link>
                   <Link to="/profile" className="text-gray-300 hover:text-white transition">
                     Profile
@@ -134,12 +130,6 @@ function App() {
             <Route path="/profile" element={
               <SignedIn>
                 <Profile />
-              </SignedIn>
-            } />
-            
-            <Route path="/watchlist" element={
-              <SignedIn>
-                <Watchlist />
               </SignedIn>
             } />
           </Routes>

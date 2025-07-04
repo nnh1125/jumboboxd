@@ -197,6 +197,27 @@ function Profile() {
     }
   };
 
+  const deleteReview = async (reviewId) => {
+    try {
+      const token = await getToken();
+      const response = await fetch(`/api/movies/reviews?reviewId=${reviewId}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        fetchUserReviews();
+        fetchStats();
+      } else {
+        console.error('Failed to delete review');
+      }
+    } catch (err) {
+      console.error('Error deleting review:', err);
+    }
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setCurrentPage(1); // Reset to page 1 when switching tabs
@@ -310,57 +331,87 @@ function Profile() {
             : 'My Reviews'}
         </h2>
         
-        {currentMovies.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-400 mb-4">
-              {activeTab === 'watched' 
-                ? "You haven't watched any movies yet!"
-                : "Your watchlist is empty!"}
-            </p>
-            <Link 
-              to="/browse" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg inline-block"
-            >
-              Browse Movies
-            </Link>
-          </div>
-        ) : (
-          <>
-          {activeTab === 'reviews' && (
-  reviews.length === 0 ? (
-    <div className="text-center py-12">
-      <p className="text-gray-400 mb-4">You haven’t written any reviews yet!</p>
-      <Link 
-        to="/browse" 
-        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg inline-block"
-      >
-        Browse Movies
-      </Link>
-    </div>
-  ) : (
-    <div className="space-y-6">
-      {reviews.map(review => (
-        <div key={review.id} className="p-4 bg-gray-700 rounded-lg">
-          <Link to={`/movie/${review.movie.id}`} className="text-white font-semibold hover:underline">
-            {review.movie.title}
-          </Link>
-          <div className="flex text-yellow-400 text-sm mb-1">
-            {[...Array(5)].map((_, i) => (
-              <span key={i} className={i < review.score ? '' : 'opacity-30'}>★</span>
-            ))}
-          </div>
-          <p className="text-gray-400 text-sm mb-1">{new Date(review.updatedAt).toLocaleDateString()}</p>
-          <p className="text-gray-300">{review.review}</p>
-        </div>
-      ))}
-    </div>
-  )
-)}
+        {/* Reviews Tab */}
+        {activeTab === 'reviews' && (
+          reviews.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400 mb-4">You haven't written any reviews yet!</p>
+              <Link 
+                to="/browse" 
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg inline-block"
+              >
+                Browse Movies
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map(review => (
+                <div key={review.id} className="p-4 bg-gray-700 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        {review.movie.poster && (
+                          <img 
+                            src={review.movie.poster} 
+                            alt={review.movie.title}
+                            className="w-16 h-24 object-cover rounded"
+                          />
+                        )}
+                        <div>
+                          <Link to={`/movie/${review.movie.id}`} className="text-white font-semibold hover:text-yellow-400 transition">
+                            {review.movie.title}
+                          </Link>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex text-yellow-400">
+                              {[...Array(5)].map((_, i) => (
+                                <span key={i} className={i < review.score ? '' : 'opacity-30'}>★</span>
+                              ))}
+                            </div>
+                            <span className="text-gray-400 text-sm">
+                              {new Date(review.updatedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {review.review && (
+                        <p className="text-gray-300 mt-2">{review.review}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => deleteReview(review.id)}
+                      className="ml-4 text-red-400 hover:text-red-300 transition"
+                      title="Delete review"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
 
-          
-            {/* Movies Grid */}
+        {/* Movies Grid for Watched and Watchlist */}
+        {activeTab !== 'reviews' && (
+          (activeTab === 'watched' ? watchedMovies : watchlistMovies).length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400 mb-4">
+                {activeTab === 'watched' 
+                  ? "You haven't watched any movies yet!"
+                  : "Your watchlist is empty!"}
+              </p>
+              <Link 
+                to="/browse" 
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg inline-block"
+              >
+                Browse Movies
+              </Link>
+            </div>
+          ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
-              {currentMovies.map((item) => {
+              {(activeTab === 'watched' ? watchedMovies : watchlistMovies).map((item) => {
                 const movie = activeTab === 'watched' ? item.movie : item;
                 const movieId = activeTab === 'watched' ? item.movie.movieId : item.id;
                 const posterPath = activeTab === 'watched' ? item.movie.posterPath : movie.poster;
@@ -424,32 +475,32 @@ function Profile() {
                 );
               })}
             </div>
+          )
+        )}
 
-            {/* Pagination */}
-            {stats.totalPages > 1 && (
-              <div className="flex justify-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
-                >
-                  Previous
-                </button>
-                
-                <span className="px-4 py-2 text-gray-300">
-                  Page {currentPage} of {stats.totalPages}
-                </span>
-                
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, stats.totalPages))}
-                  disabled={currentPage === stats.totalPages}
-                  className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </>
+        {/* Pagination */}
+        {stats.totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-6">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+            >
+              Previous
+            </button>
+            
+            <span className="px-4 py-2 text-gray-300">
+              Page {currentPage} of {stats.totalPages}
+            </span>
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, stats.totalPages))}
+              disabled={currentPage === stats.totalPages}
+              className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
     </div>
