@@ -6,14 +6,16 @@ import { Link } from 'react-router-dom';
 function Profile() {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
-  const [activeTab, setActiveTab] = useState('watched'); // 'watched' or 'watchlist'
+  const [activeTab, setActiveTab] = useState('watched'); // 'watched' or 'watchlist' , or 'reviews'
   const [watchedMovies, setWatchedMovies] = useState([]);
   const [watchlistMovies, setWatchlistMovies] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalWatched: 0,
     totalWatchlist: 0,
+    totalReviews: 0,
     totalPages: 0
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,8 +24,10 @@ function Profile() {
     if (isLoaded && user) {
       if (activeTab === 'watched') {
         fetchWatchedMovies();
-      } else {
+      } else if (activeTab === 'watchlist') {
         fetchWatchlistMovies();
+      } else if (activeTab === 'reviews') {
+        fetchUserReviews();
       }
       fetchStats();
     }
@@ -48,6 +52,18 @@ function Profile() {
       if (watchlistResponse.ok) {
         const watchlistData = await watchlistResponse.json();
         setStats(prev => ({ ...prev, totalWatchlist: watchlistData.pagination.total }));
+      }
+
+      // Get reviews count
+      const reviewsResponse = await fetch(`/api/movies/reviews?page=1&limit=1`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (reviewsResponse.ok) {
+        console.log('Fetching reviews count');
+        const reviewsData = await reviewsResponse.json();
+        setStats(prev => ({ ...prev, totalReviews: reviewsData.pagination.total }));
       }
     } catch (err) {
       console.error('Error fetching stats:', err);
@@ -102,6 +118,33 @@ function Profile() {
     } catch (err) {
       setError(err.message);
       console.error('Error fetching watchlist:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserReviews = async () => {
+    try {
+      setLoading(true);
+      const token = await getToken();
+      const response = await fetch(`/api/movies/reviews?userId=${user.id}&page=${currentPage}&limit=12`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        setReviews(data.reviews);
+        setStats(prev => ({
+          ...prev,
+          totalReviews: data.pagination.total,
+          totalPages: data.pagination.totalPages
+        }));
+      } else {
+        throw new Error('Failed to fetch reviews');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching reviews:', err);
     } finally {
       setLoading(false);
     }
@@ -218,7 +261,7 @@ function Profile() {
             <div className="text-gray-400 text-sm">Watchlist Items</div>
           </div>
           <div className="bg-gray-700 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-white">0</div>
+            <div className="text-2xl font-bold text-white">{stats.totalReviews}</div>
             <div className="text-gray-400 text-sm">Reviews Written</div>
           </div>
         </div>
@@ -247,10 +290,24 @@ function Profile() {
           >
             Watchlist ({stats.totalWatchlist})
           </button>
+          <button
+            onClick={() => handleTabChange('reviews')}
+            className={`px-4 py-2 font-medium transition-colors ml-6 ${
+              activeTab === 'reviews'
+                ? 'text-yellow-400 border-b-2 border-yellow-400'
+                : 'text-gray-400 hover:text-white'
+            }`}
+          >
+            Reviews ({stats.totalReviews})
+          </button>
         </div>
 
         <h2 className="text-2xl font-bold text-white mb-6">
-          {activeTab === 'watched' ? 'Recently Watched' : 'My Watchlist'}
+          {activeTab === 'watched'
+            ? 'Recently Watched'
+            : activeTab === 'watchlist'
+            ? 'My Watchlist'
+            : 'My Reviews'}
         </h2>
         
         {currentMovies.length === 0 ? (
@@ -269,6 +326,38 @@ function Profile() {
           </div>
         ) : (
           <>
+          {activeTab === 'reviews' && (
+  reviews.length === 0 ? (
+    <div className="text-center py-12">
+      <p className="text-gray-400 mb-4">You haven’t written any reviews yet!</p>
+      <Link 
+        to="/browse" 
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg inline-block"
+      >
+        Browse Movies
+      </Link>
+    </div>
+  ) : (
+    <div className="space-y-6">
+      {reviews.map(review => (
+        <div key={review.id} className="p-4 bg-gray-700 rounded-lg">
+          <Link to={`/movie/${review.movie.id}`} className="text-white font-semibold hover:underline">
+            {review.movie.title}
+          </Link>
+          <div className="flex text-yellow-400 text-sm mb-1">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className={i < review.score ? '' : 'opacity-30'}>★</span>
+            ))}
+          </div>
+          <p className="text-gray-400 text-sm mb-1">{new Date(review.updatedAt).toLocaleDateString()}</p>
+          <p className="text-gray-300">{review.review}</p>
+        </div>
+      ))}
+    </div>
+  )
+)}
+
+          
             {/* Movies Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
               {currentMovies.map((item) => {
