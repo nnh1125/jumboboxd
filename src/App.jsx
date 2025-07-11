@@ -80,13 +80,13 @@ function App() {
             {/* Public Routes */}
             <Route path="/sign-in/*" element={
               <div className="flex justify-center items-center min-h-[60vh]">
-                <SignIn afterSignInUrl="/" signUpUrl="/sign-up" />
+                <SignIn/>
               </div>
             } />
             
             <Route path="/sign-up/*" element={
               <div className="flex justify-center items-center min-h-[60vh]">
-                <SignUp afterSignUpUrl="/" signInUrl="/sign-in" />
+                <SignUp />
               </div>
             } />
             
