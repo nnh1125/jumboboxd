@@ -234,8 +234,10 @@ function MovieDetail() {
       
       if (response.ok) {
         const data = await response.json();
-        if (data.reviews.length > 0) {
-          setUserReview(data.reviews[0]);
+        // Find the review that belongs to the current user
+        const currentUserReview = data.reviews.find(review => review.user.id === user?.id);
+        if (currentUserReview) {
+          setUserReview(currentUserReview);
         }
       }
     } catch (err) {
