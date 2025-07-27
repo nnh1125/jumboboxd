@@ -52,6 +52,9 @@ export default async function handler(req, res) {
         if (reviewUser) {
           where.userId = reviewUser.id
         }
+      } else {
+        // If no specific userId provided, filter by the authenticated user
+        where.userId = user.id
       }
 
       const total = await prisma.rating.count({ where })
