@@ -82,7 +82,7 @@ export default async function handler(req, res) {
           email: review.user.email
         },
         movie: {
-          id: review.movie.tmdbId,
+          id: review.movie.movieId,
           title: review.movie.title,
           poster: review.movie.posterPath
         }
@@ -166,7 +166,7 @@ export default async function handler(req, res) {
           username: rating.user.username
         },
         movie: {
-          id: rating.movie.tmdbId,
+          id: rating.movie.movieId,
           title: rating.movie.title
         }
       })
