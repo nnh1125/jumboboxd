@@ -1,5 +1,6 @@
-// api/movies/watched.js
+// api/movies/check-watched.js
 import prisma from '../../lib/prisma.js' 
+import { verifyToken } from '@clerk/backend'
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -7,13 +8,24 @@ export default async function handler(req, res) {
     }
   
     try {
-      const { userId, id } = req.query
-      
-      if (!userId || !id) {
-        return res.status(400).json({ error: 'User ID and movie ID are required' })
+      // Get user from Authorization header
+      const authHeader = req.headers.authorization
+      if (!authHeader) {
+        return res.status(401).json({ error: 'No authorization header' })
       }
-  
-      // Find the user
+
+      const token = authHeader.replace('Bearer ', '')
+      const { sub: userId } = await verifyToken(token, {
+        secretKey: process.env.CLERK_SECRET_KEY
+      })
+
+      const { id } = req.query
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Movie ID is required' })
+      }
+
+      // Get user from database
       const user = await prisma.user.findUnique({
         where: { clerkId: userId }
       })

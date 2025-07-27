@@ -1,4 +1,4 @@
-// api/watchlist.js
+// api/movies/watchlist.js
 import prisma from '../../lib/prisma.js' 
 import { verifyToken } from '@clerk/backend'
 

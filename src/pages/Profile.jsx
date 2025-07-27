@@ -49,7 +49,11 @@ function Profile() {
       // Fetch all stats in parallel
       const [watchedResponse, watchlistResponse, reviewsResponse] = await Promise.all([
         // Get watched count
-        fetch(`/api/movies/watched?userId=${user.id}&page=1&limit=1`),
+        fetch('/api/movies/watched?page=1&limit=1', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
         
         // Get watchlist count
         fetch('/api/movies/watchlist?page=1&limit=1', {
@@ -59,7 +63,7 @@ function Profile() {
         }),
         
         // Get reviews count
-        fetch(`/api/movies/reviews?userId=${user.id}&page=1&limit=1`, {
+        fetch('/api/movies/reviews?page=1&limit=1', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -92,7 +96,12 @@ function Profile() {
   const fetchWatchedMovies = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/movies/watched?userId=${user.id}&page=${currentPage}&limit=12`);
+      const token = await getToken();
+      const response = await fetch(`/api/movies/watched?page=${currentPage}&limit=12`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -146,7 +155,7 @@ function Profile() {
     try {
       setLoading(true);
       const token = await getToken();
-      const response = await fetch(`/api/movies/reviews?userId=${user.id}&page=${currentPage}&limit=12`, {
+      const response = await fetch(`/api/movies/reviews?page=${currentPage}&limit=12`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
   
@@ -171,11 +180,14 @@ function Profile() {
 
   const removeFromWatched = async (movieId) => {
     try {
+      const token = await getToken();
       const response = await fetch('/api/movies/watched', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ 
-          userId: user.id,
           id: movieId 
         })
       });

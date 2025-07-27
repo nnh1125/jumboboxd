@@ -68,7 +68,12 @@ function MovieDetail() {
 
   const checkWatchedStatus = async () => {
     try {
-      const response = await fetch(`/api/movies/check-watched?userId=${user.id}&id=${id}`);
+      const token = await getToken();
+      const response = await fetch(`/api/movies/check-watched?id=${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setIsWatched(data.isWatched);
@@ -106,13 +111,17 @@ function MovieDetail() {
     
     setWatchedLoading(true);
     try {
+      const token = await getToken();
+      
       if (isWatched) {
         // Remove from watched
         const response = await fetch('/api/movies/watched', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ 
-            userId: user.id,
             id: id 
           })
         });
@@ -127,9 +136,11 @@ function MovieDetail() {
         // Mark as watched
         const response = await fetch('/api/movies/watched', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({
-            userId: user.id,
             id: id,
             title: movie.title,
             overview: movie.description || movie.overview,
@@ -217,7 +228,7 @@ function MovieDetail() {
   const fetchUserReview = async () => {
     try {
       const token = await getToken();
-      const response = await fetch(`/api/movies/reviews?movieId=${id}&userId=${user.id}`, {
+      const response = await fetch(`/api/movies/reviews?movieId=${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -237,11 +248,14 @@ function MovieDetail() {
     fetchReviews(); // Refresh all reviews
     if (!isWatched && movie && user) {
       try {
+        const token = await getToken();
         const response = await fetch('/api/movies/watched', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({
-            userId: user.id,
             id: id,
             title: movie.title,
             overview: movie.description || movie.overview,
