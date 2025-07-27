@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'GET') {
-      const { movieId, userId: queryUserId, page = 1, limit = 10 } = req.query
+      const { movieId, page = 1, limit = 10 } = req.query
       const pageNum = parseInt(page)
       const limitNum = parseInt(limit)
       const skip = (pageNum - 1) * limitNum
@@ -42,18 +42,8 @@ export default async function handler(req, res) {
         } else {
           return res.status(200).json({ reviews: [], pagination: { total: 0, totalPages: 0 } })
         }
-      }
-      
-      // If userId provided, get reviews by specific user
-      if (queryUserId) {
-        const reviewUser = await prisma.user.findUnique({
-          where: { clerkId: queryUserId }
-        })
-        if (reviewUser) {
-          where.userId = reviewUser.id
-        }
       } else {
-        // If no specific userId provided, filter by the authenticated user
+        // If no movieId provided, filter by the authenticated user (for Profile page)
         where.userId = user.id
       }
 
